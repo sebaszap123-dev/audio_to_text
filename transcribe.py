@@ -5,7 +5,11 @@ import shutil
 import argparse
 from pathlib import Path
 
-SUPPORTED_FORMATS = {".opus", ".mp3", ".wav"}
+from dotenv import load_dotenv
+
+load_dotenv()
+
+SUPPORTED_FORMATS = {".opus", ".mp3", ".wav", ".ogg"}
 AUDIOS_DIR = Path("audios")
 OUTPUT_PROCESSED_DIR = Path("output/processed")
 OUTPUT_STT_DIR = Path("output/stt")
