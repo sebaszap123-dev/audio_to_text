@@ -1,2 +1,3 @@
 faster-whisper
 python-dotenv
+PySide6

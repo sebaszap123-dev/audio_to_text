@@ -62,3 +62,22 @@ output/
 ```
 
 Los audios se mueven automáticamente a `output/processed/` para no reprocesarlos en ejecuciones futuras.
+
+## Para abrir la app:
+
+
+# opción A
+.venv/bin/python run_gui.py
+
+# opción B
+.venv/bin/python -m app
+
+## Qué tiene la GUI:
+
+Agregar audios — abre el selector de archivos filtrado por los formatos soportados (.opus, .mp3, .wav, .ogg, .m4a, .flac)
+Lista de archivos seleccionados, con tooltip al path completo
+ComboBox de modelo — tiny / base / small / medium / large
+Checkbox para mover los audios a output/processed/ tras transcribir (o dejarlos donde están)
+Barra de progreso por archivo
+Log en vivo mientras corre el modelo (la ventana no se congela — usa QThread)
+Al terminar, los archivos procesados desaparecen de la lista y aparece un diálogo de confirmación o de error
