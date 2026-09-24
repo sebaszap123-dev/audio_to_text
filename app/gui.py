@@ -1,3 +1,4 @@
+import subprocess
 import sys
 from pathlib import Path
 
@@ -9,6 +10,7 @@ from PySide6.QtWidgets import (
     QComboBox,
     QFileDialog,
     QHBoxLayout,
+    QInputDialog,
     QLabel,
     QListWidget,
     QListWidgetItem,
@@ -134,6 +136,14 @@ class MainWindow(QMainWindow):
         self.result_label = QLabel("Selecciona un archivo para ver su texto.")
         top_bar.addWidget(self.result_label)
         top_bar.addStretch()
+        self.btn_rename = QPushButton("Renombrar")
+        self.btn_rename.setEnabled(False)
+        self.btn_rename.clicked.connect(self._rename_result_file)
+        top_bar.addWidget(self.btn_rename)
+        self.btn_open_location = QPushButton("Abrir ubicación")
+        self.btn_open_location.setEnabled(False)
+        self.btn_open_location.clicked.connect(self._open_result_location)
+        top_bar.addWidget(self.btn_open_location)
         self.btn_copy = QPushButton("Copiar texto")
         self.btn_copy.setEnabled(False)
         self.btn_copy.clicked.connect(self._copy_result_text)
@@ -234,6 +244,8 @@ class MainWindow(QMainWindow):
         self.result_list.clear()
         self.result_view.clear()
         self.btn_copy.setEnabled(False)
+        self.btn_rename.setEnabled(False)
+        self.btn_open_location.setEnabled(False)
         self.result_label.setText("Selecciona un archivo para ver su texto.")
         stt_dir = OUTPUT_STT_DIR
         if not stt_dir.exists():
@@ -247,6 +259,8 @@ class MainWindow(QMainWindow):
         if current is None:
             self.result_view.clear()
             self.btn_copy.setEnabled(False)
+            self.btn_rename.setEnabled(False)
+            self.btn_open_location.setEnabled(False)
             self.result_label.setText("Selecciona un archivo para ver su texto.")
             return
         path = Path(current.data(Qt.UserRole))
@@ -257,6 +271,44 @@ class MainWindow(QMainWindow):
         self.result_view.setPlainText(text)
         self.result_label.setText(path.name)
         self.btn_copy.setEnabled(bool(text.strip()))
+        self.btn_rename.setEnabled(True)
+        self.btn_open_location.setEnabled(True)
+
+    def _rename_result_file(self):
+        item = self.result_list.currentItem()
+        if item is None:
+            return
+        old_path = Path(item.data(Qt.UserRole))
+        new_name, ok = QInputDialog.getText(
+            self, "Renombrar archivo", "Nuevo nombre:", text=old_path.stem
+        )
+        if not ok or not new_name.strip():
+            return
+        new_name = new_name.strip()
+        if not new_name.endswith(".txt"):
+            new_name += ".txt"
+        new_path = old_path.parent / new_name
+        if new_path.exists():
+            QMessageBox.warning(self, "Error", f"Ya existe un archivo con el nombre '{new_name}'.")
+            return
+        try:
+            old_path.rename(new_path)
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"No se pudo renombrar:\n{e}")
+            return
+        item.setText(new_name)
+        item.setData(Qt.UserRole, str(new_path))
+        self.result_label.setText(new_name)
+
+    def _open_result_location(self):
+        item = self.result_list.currentItem()
+        if item is None:
+            return
+        folder = Path(item.data(Qt.UserRole)).parent
+        try:
+            subprocess.Popen(["xdg-open", str(folder)])
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"No se pudo abrir la ubicación:\n{e}")
 
     def _copy_result_text(self):
         text = self.result_view.toPlainText()
